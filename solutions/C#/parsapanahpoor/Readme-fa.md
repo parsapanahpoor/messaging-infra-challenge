@@ -19,80 +19,61 @@
 ## نصب RabbitMQ با Docker
 ```bash
 docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
-
+```
 دسترسی به Management UI: http://localhost:15672
 
 اطلاعات ورود پیش‌فرض: guest / guest
 
-## ساختار پروژه
-
-
-MessagingInfra/
-├── Common/
-│   ├── Models/
-│   │   ├── ErrorLog.cs
-│   │   └── InfoLog.cs
-│   └── Config/
-│       └── RabbitConfig.cs
-├── Producer/
-│   ├── Producer.csproj
-│   └── Program.cs
-├── ErrorWorker/
-│   ├── ErrorWorker.csproj
-│   └── Program.cs
-└── InfoSubscriber/
-├── InfoSubscriber.csproj
-└── Program.cs
 
 ## تنظیم متغیرهای محیطی
 
 **Linux/macOS:**
 
-bash
+```bash
 export RABBITMQ_HOST=localhost
 export RABBITMQ_PORT=5672
 export RABBITMQ_USER=guest
 export RABBITMQ_PASS=guest
 export RABBITMQ_VHOST=/
-
+```
 **Windows PowerShell:**
 
-powershell
+```powershell
 $env:RABBITMQ_HOST="localhost"
 $env:RABBITMQ_PORT="5672"
 $env:RABBITMQ_USER="guest"
 $env:RABBITMQ_PASS="guest"
 $env:RABBITMQ_VHOST="/"
-
+```
 ## اجرای Producer
 
-bash
+```bash
 dotnet run --project Producer/Producer.csproj
-
+```
 ## اجرای Error Workers
 
 **Terminal 1:**
 
-bash
+```bash
 dotnet run --project ErrorWorker/ErrorWorker.csproj WorkerA
-
+```
 **Terminal 2:**
 
-bash
+```bash
 dotnet run --project ErrorWorker/ErrorWorker.csproj WorkerB
-
+```
 ## اجرای Info Subscribers
 
 **Terminal 1:**
 
-bash
+```bash
 dotnet run --project InfoSubscriber/InfoSubscriber.csproj elk
-
+```
 **Terminal 2:**
 
-bash
+```bash
 dotnet run --project InfoSubscriber/InfoSubscriber.csproj grafana
-
+```
 ## تست Work Queue Pattern
 
 **هدف:** تأیید توزیع عادلانه پیام‌ها بین Worker ها بدون تکرار.
@@ -125,30 +106,30 @@ dotnet run --project InfoSubscriber/InfoSubscriber.csproj grafana
 - تنظیم prefetchCount به 1 برای توزیع عادلانه
 - Queue دارای ویژگی Durable
 
-csharp
+```csharp
 channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
 channel.BasicConsume(queue: "logs.error.q", autoAck: false, consumer: consumer);
-
+```
 **Fanout Pattern:**
 
 - استفاده از Fanout Exchange برای broadcast
 - هر Subscriber صف اختصاصی خود را دارد
 - اتصال صف‌ها به Exchange بدون Routing Key
 
-csharp
+```csharp
 channel.ExchangeDeclare("logs.info.exchange", ExchangeType.Fanout, durable: true);
 string queueName = $"logs.info.q.{subscriberId}";
 channel.QueueBind(queue: queueName, exchange: "logs.info.exchange", routingKey: "");
-
+```
 ## عیب‌یابی رایج
 
 **مشکل: Connection refused**
 
 بررسی کنید که RabbitMQ در حال اجراست:
 
-bash
+```bash
 docker ps | grep rabbitmq
-
+```
 **مشکل: پیام‌ها دریافت نمی‌شوند**
 
 به RabbitMQ Management UI مراجعه کنید و تأیید کنید که Queue ها و Exchange ها به درستی ایجاد شده‌اند.
