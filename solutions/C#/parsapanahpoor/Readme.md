@@ -20,11 +20,11 @@ The system implements two distinct patterns:
 ## Installing RabbitMQ with Docker
 ```bash
 docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
-
+```
 Access Management UI: http://localhost:15672
 
 Default credentials: guest / guest
-```
+
 ## Project Structure
 
 
